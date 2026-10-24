@@ -27,15 +27,17 @@ void convert_string_to_number(char string[], unsigned short number[]) {
     }
 };
 
-unsigned short calculate_array_size(char string[]) {
-    return ceil(strlen(string) / 4);
+unsigned short calculate_array_size(char string[], short size_of_a_chunk) {
+    short lenght_of_string = strlen(string);
+    return (lenght_of_string / size_of_a_chunk) + (lenght_of_string % size_of_a_chunk != 0);
 }
 
 int main(void) {
-    unsigned short number[calculate_array_size("123456789")];
+    unsigned short number[calculate_array_size("11123456789", 4)];
     convert_string_to_number("123456789", number);
 
-    printf("%d\n", calculate_array_size("123456789"));
+    printf("%d\n", calculate_array_size("1111111111111111111111111111111123456789", 4));
+
     // char operation;
     // scanf("%c", &operation);
     //
