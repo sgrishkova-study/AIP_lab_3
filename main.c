@@ -3,6 +3,8 @@
 #include <string.h>
 #include <math.h>
 
+#define size_of_a_chunk 4
+
 int add(int a, int b) {};
 
 int subtract(int a, int b) {};
@@ -19,24 +21,37 @@ int sum_range(int a, int b) {};
 // но если предполагается что инпут идеально причесанный то можно забить
 void read_input() {};
 
-void convert_string_to_number(char string[], unsigned short number[]) {
-    int string_length = strlen(string);
+void convert_string_to_number(char string[], unsigned short number[], unsigned short size_of_number) {
+    unsigned short string_length = strlen(string);
+    unsigned short limb_number = size_of_number - 1;
+    unsigned short step = string_length % size_of_a_chunk;
 
-    for (int i = 0, j = string_length - 1; i < string_length; i++, j--) {
-        number[j] = string[i] - '0';
+    if (step == 0) { step = size_of_a_chunk; };
+
+    for (unsigned short i = 0; i < string_length; i++) {
+        if (step == 0) { step = size_of_a_chunk; limb_number -= 1; };
+
+        unsigned short digit = string[i] - '0';
+        unsigned short multiplier = 1;
+
+        for (unsigned short j = 1; j < step; j++) {
+            multiplier *= 10;
+        }
+
+        number[limb_number] += digit * multiplier;
+        step -= 1;
     }
-};
+}
 
-unsigned short calculate_array_size(char string[], short size_of_a_chunk) {
-    short lenght_of_string = strlen(string);
-    return (lenght_of_string / size_of_a_chunk) + (lenght_of_string % size_of_a_chunk != 0);
+unsigned short calculate_array_size(char string[]) {
+    short length_of_string = strlen(string);
+    return (length_of_string / size_of_a_chunk) + (length_of_string % size_of_a_chunk != 0);
 }
 
 int main(void) {
-    unsigned short number[calculate_array_size("11123456789", 4)];
-    convert_string_to_number("123456789", number);
-
-    printf("%d\n", calculate_array_size("1111111111111111111111111111111123456789", 4));
+    unsigned short number[calculate_array_size("23456789")];
+    memset(number, 0, sizeof(number));
+    convert_string_to_number("23456789", number,sizeof(number) / sizeof(number[0]));
 
     // char operation;
     // scanf("%c", &operation);
