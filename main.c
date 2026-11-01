@@ -51,42 +51,34 @@ void convert_string_to_number(char string[], unsigned short number[], unsigned s
 unsigned short calculate_array_size(const char string[]) {
     unsigned long length_of_string = strlen(string);
     double calculation = (double) length_of_string * BASE_DIFFERENCE;
-
     return (unsigned short)(ceil(calculation));
 }
 
 int main(void) {
-    unsigned short number[calculate_array_size("986513968951")];
+    char operation;
+    scanf("%c\n", &operation);
+
+    char * number_1 = NULL;
+    size_t size_num1 = 0;
+    unsigned int length_of_number_1 = getline(&number_1, &size_num1, stdin);
+    number_1[length_of_number_1 - 1] = '\0';
+
+    unsigned short number[calculate_array_size(number_1)];
     memset(number, 0, sizeof(number));
-    convert_string_to_number("986513968951", number,sizeof(number) / sizeof(number[0]));
+    convert_string_to_number(number_1, number,sizeof(number) / sizeof(number[0]));
 
-    printf("yaaay");
-
-    // char operation;
-    // scanf("%c", &operation);
     //
-    // if (operation == '+') {
-    //     read_input();
-    //     add(1, 2);
-    // } else if (operation == '-') {
-    //     read_input();
-    //     subtract(1, 2);
-    // } else if (operation == '*') {
-    //     read_input();
-    //     multiply(1, 2);
-    // } else if (operation == '^') {
-    //     read_input();
-    //     power(1, 2);
-    // } else if (operation == '!') {
-    //     read_input();
-    //     factorial(1);
-    // } else if (operation == 'S') {
-    //     read_input();
-    //     sum_range(1, 2);
-    // } else {
-    //     printf("Input error: invalid operation!\n");
-    //     return 1;
-    // };
 
+    char * number_2 = NULL;
+    size_t size_num2 = 0;
+    unsigned int length_of_number_2 = getline(&number_2, &size_num2, stdin);
+    number_2 [length_of_number_2 - 1] = '\0';
+
+    unsigned short number2[calculate_array_size(number_2)];
+    memset(number2, 0, sizeof(number));
+    convert_string_to_number(number_2, number2,sizeof(number) / sizeof(number[0]));
+
+
+    printf("%s\n", number_1);
     return 0;
 }
