@@ -4,8 +4,11 @@
 #include <math.h>
 
 #define size_of_a_chunk 4
+#define base_difference 0.2076
 
-int add(int a, int b) {};
+int add(int a, int b) {
+
+};
 
 int subtract(int a, int b) {};
 
@@ -43,15 +46,19 @@ void convert_string_to_number(char string[], unsigned short number[], unsigned s
     }
 }
 
-unsigned short calculate_array_size(char string[]) {
-    short length_of_string = strlen(string);
-    return (length_of_string / size_of_a_chunk) + (length_of_string % size_of_a_chunk != 0);
+// digits in base 2^16 = [ amount of digits in base 10 * log base 2^16 of 10 ]
+unsigned short calculate_array_size(const char string[]) {
+    int length_of_string = strlen(string);
+    double calculation = (double) length_of_string * base_difference;
+    return (unsigned short)(ceil(calculation));
 }
 
 int main(void) {
-    unsigned short number[calculate_array_size("23456789")];
-    memset(number, 0, sizeof(number));
-    convert_string_to_number("23456789", number,sizeof(number) / sizeof(number[0]));
+
+    printf("%u", calculate_array_size("123456666666"));
+    // unsigned short number[calculate_array_size("123456789")];
+    // memset(number, 0, sizeof(number));
+    // convert_string_to_number("123456789", number,sizeof(number) / sizeof(number[0]));
 
     // char operation;
     // scanf("%c", &operation);
