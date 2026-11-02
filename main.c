@@ -21,8 +21,6 @@ int factorial(int n) {};
 
 int sum_range(int a, int b) {};
 
-// я не знаю насколько это надо, по идее нужен какой-то обработчик инпута
-// но если предполагается что инпут идеально причесанный то можно забить
 void read_input() {};
 
 void convert_string_to_number(char string[], unsigned short number[], unsigned short size_of_number) {
@@ -58,27 +56,27 @@ int main(void) {
     char operation;
     scanf("%c\n", &operation);
 
-    char * number_1 = NULL;
-    size_t size_num1 = 0;
-    unsigned int length_of_number_1 = getline(&number_1, &size_num1, stdin);
-    number_1[length_of_number_1 - 1] = '\0';
+    char * string_1 = NULL;
+    size_t size_string_1 = 0;
+    unsigned int length_of_number_1 = getline(&string_1, &size_string_1, stdin);
+    string_1[length_of_number_1 - 1] = '\0';
 
-    unsigned short number[calculate_array_size(number_1)];
-    memset(number, 0, sizeof(number));
-    convert_string_to_number(number_1, number,sizeof(number) / sizeof(number[0]));
+    unsigned short number_1[calculate_array_size(string_1)];
+    memset(number_1, 0, sizeof(number_1));
+    convert_string_to_number(string_1, number_1,sizeof(number_1) / sizeof(number_1[0]));
 
     //
 
-    char * number_2 = NULL;
-    size_t size_num2 = 0;
-    unsigned int length_of_number_2 = getline(&number_2, &size_num2, stdin);
-    number_2 [length_of_number_2 - 1] = '\0';
+    char * string_2 = NULL;
+    size_t size_string2 = 0;
+    unsigned int length_of_number_2 = getline(&string_2, &size_string2, stdin);
+    string_2 [length_of_number_2 - 1] = '\0';
 
-    unsigned short number2[calculate_array_size(number_2)];
-    memset(number2, 0, sizeof(number));
-    convert_string_to_number(number_2, number2,sizeof(number) / sizeof(number[0]));
+    unsigned short number_2[calculate_array_size(string_2)];
+    memset(number_2, 0, sizeof(number_2));
+    convert_string_to_number(string_2, number_2,sizeof(number_2) / sizeof(number_2[0]));
 
 
-    printf("%s\n", number_1);
+    printf("%s\n", string_1);
     return 0;
 }
