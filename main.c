@@ -14,7 +14,7 @@
 void add(unsigned short number_1[], unsigned short number_2[], unsigned short result[],
     unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
     for (unsigned short i = 0; i < min(size_of_number_1, size_of_number_2); i++) {
-        unsigned int temp = number_1[i] + number_2[i];
+        unsigned int temp = result[i] + number_1[i] + number_2[i];
         unsigned short carry = temp / BASE;
         result[i] = temp % BASE;
         result[i + 1] = carry;
@@ -119,6 +119,8 @@ int main(void) {
             memset(result, 0, sizeof(result));
 
             add(number_1, number_2, result, size_of_number_1, size_of_number_2,max(size_of_number_1, size_of_number_2) + 1);
+
+            printf("yaay");
         } else {
             printf("EXPECTED NUMBER");
             return -1;
