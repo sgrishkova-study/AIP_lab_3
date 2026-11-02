@@ -7,8 +7,35 @@
 #define BASE_DIFFERENCE 0.2076
 #define BASE 65536
 
-int add(int a, int b) {
+#define min(x, y) ((x) < (y) ? (x) : (y))
+#define max(x, y) ((x) > (y) ? (x) : (y))
 
+void add(unsigned short number_1[], unsigned short number_2[], unsigned short result[],
+    unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
+    for (unsigned short i = 0; i < min(size_of_number_1, size_of_number_2); i++) {
+        unsigned int temp = number_1[i] + number_2[i];
+        unsigned short carry = temp / BASE;
+        result[i] = temp % BASE;
+        result[i + 1] = carry;
+    }
+
+    if (size_of_number_1 - size_of_number_2 != 0) {
+        if (size_of_number_1 > size_of_number_2) {
+            for (unsigned short i = size_of_number_2; i < size_of_number_1; i++) {
+                unsigned int temp = number_1[i] + result[i];
+                unsigned short carry = temp / BASE;
+                result[i] = temp % BASE;
+                result[i + 1] = carry;
+            }
+        } else {
+            for (unsigned short i = size_of_number_1; i < size_of_number_2; i++) {
+                unsigned int temp = number_2[i] + result[i];
+                unsigned short carry = temp / BASE;
+                result[i] = temp % BASE;
+                result[i + 1] = carry;
+            }
+        }
+    }
 };
 
 int subtract(int a, int b) {};
@@ -63,7 +90,8 @@ int main(void) {
 
     unsigned short number_1[calculate_array_size(string_1)];
     memset(number_1, 0, sizeof(number_1));
-    convert_string_to_number(string_1, number_1,sizeof(number_1) / sizeof(number_1[0]));
+    unsigned short size_of_number_1 = sizeof(number_1) / sizeof(number_1[0]);
+    convert_string_to_number(string_1, number_1, size_of_number_1);
 
     //
 
@@ -74,9 +102,14 @@ int main(void) {
 
     unsigned short number_2[calculate_array_size(string_2)];
     memset(number_2, 0, sizeof(number_2));
-    convert_string_to_number(string_2, number_2,sizeof(number_2) / sizeof(number_2[0]));
+    unsigned short size_of_number_2 = sizeof(number_2) / sizeof(number_2[0]);
+    convert_string_to_number(string_2, number_2,size_of_number_2);
 
 
-    printf("%s\n", string_1);
+    unsigned short result[max(size_of_number_1, size_of_number_2) + 1];
+    memset(result, 0, sizeof(result));
+    add(number_1, number_2, result, size_of_number_1, size_of_number_2,max(size_of_number_1, size_of_number_2) + 1);
+
+    printf("yaaay");
     return 0;
 }
