@@ -9,7 +9,7 @@
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
 
-void add(unsigned short number_1[], unsigned short number_2[], unsigned short result[],
+void add(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[],
     unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
     for (unsigned short i = 0; i < size_of_result; i++) {
         unsigned int temp = result[i];
@@ -21,7 +21,7 @@ void add(unsigned short number_1[], unsigned short number_2[], unsigned short re
         if (i < size_of_number_2) {
             temp += number_2[i];
         }
-        
+
         unsigned short carry = temp / BASE;
         result[i] = temp % BASE;
         result[i + 1] = carry;
@@ -61,7 +61,7 @@ void convert_string_to_number(char string[], unsigned short number[], unsigned s
     }
 }
 
-// digits in base 2^16 = [ amount of digits in base 10 * log base 2^16 of 10 ]
+// Digits in base 2^16 = [ Amount of digits in base 10 * log base 2^16 of 10 ]
 unsigned short calculate_array_size(const char string[]) {
     unsigned long length_of_string = strlen(string);
     double calculation = (double) length_of_string * BASE_DIFFERENCE;
@@ -80,11 +80,15 @@ int get_input(char* string[]) {
     return length_of_string;
 }
 
+void convert_array_to_string(const unsigned short [], char string[]) {
+
+}
+
 int main(void) {
     char operation;
     scanf("%c\n", &operation);
 
-    if (operation == '+') {
+    if (strchr("+-*^S!", operation) != NULL) {
         char* string_1 = NULL;
         int length_of_number_1 = get_input(&string_1);
 
@@ -104,21 +108,25 @@ int main(void) {
             unsigned short size_of_number_2 = sizeof(number_2) / sizeof(number_2[0]);
             convert_string_to_number(string_2, number_2, size_of_number_2);
 
-            unsigned short result[max(size_of_number_1, size_of_number_2) + 1];
-            memset(result, 0, sizeof(result));
+            unsigned short size_of_result = 0;
 
-            add(number_1, number_2, result, size_of_number_1, size_of_number_2,max(size_of_number_1, size_of_number_2) + 1);
-
+            switch (operation) {
+                case '+':
+                    size_of_result = max(size_of_number_1, size_of_number_2) + 1;
+                    unsigned short result[size_of_result];
+                    memset(result, 0, sizeof(result));
+                    add(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+                    break;
+            }
+            
             printf("yaay");
         } else {
-            printf("EXPECTED NUMBER");
+            printf("Invalid number.");
             return -1;
         }
 
-        printf("yaaay");
-
     } else {
-        printf("INVALID OPERATION");
+        printf("Unknown operation.");
         return -1;
     }
 
