@@ -1,9 +1,7 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
-#define size_of_a_chunk 4
 #define BASE_DIFFERENCE 0.2076
 #define BASE 65536
 
@@ -13,29 +11,20 @@
 
 void add(unsigned short number_1[], unsigned short number_2[], unsigned short result[],
     unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
-    for (unsigned short i = 0; i < min(size_of_number_1, size_of_number_2); i++) {
-        unsigned int temp = result[i] + number_1[i] + number_2[i];
+    for (unsigned short i = 0; i < size_of_result; i++) {
+        unsigned int temp = result[i];
+
+        if (i < size_of_number_1) {
+            temp += number_1[i];
+        }
+
+        if (i < size_of_number_2) {
+            temp += number_2[i];
+        }
+        
         unsigned short carry = temp / BASE;
         result[i] = temp % BASE;
         result[i + 1] = carry;
-    }
-
-    if (size_of_number_1 - size_of_number_2 != 0) {
-        if (size_of_number_1 > size_of_number_2) {
-            for (unsigned short i = size_of_number_2; i < size_of_number_1; i++) {
-                unsigned int temp = number_1[i] + result[i];
-                unsigned short carry = temp / BASE;
-                result[i] = temp % BASE;
-                result[i + 1] = carry;
-            }
-        } else {
-            for (unsigned short i = size_of_number_1; i < size_of_number_2; i++) {
-                unsigned int temp = number_2[i] + result[i];
-                unsigned short carry = temp / BASE;
-                result[i] = temp % BASE;
-                result[i + 1] = carry;
-            }
-        }
     }
 };
 
