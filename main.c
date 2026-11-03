@@ -11,8 +11,10 @@
 
 void add(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[],
     unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
+    unsigned int temp;
+
     for (unsigned short i = 0; i < size_of_result; i++) {
-        unsigned int temp = result[i];
+        temp = result[i];
 
         if (i < size_of_number_1) {
             temp += number_1[i];
@@ -28,7 +30,34 @@ void add(const unsigned short number_1[], const unsigned short number_2[], unsig
     }
 };
 
-int subtract(int a, int b) {};
+unsigned short subtract(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[],
+    unsigned short size_of_number_1, unsigned short size_of_number_2, unsigned short size_of_result) {
+    unsigned short minus = 0;
+    short carry = 0;
+    int temp;
+
+    for (unsigned short i = 0; i < size_of_result; i++) {
+        temp = carry + number_1[i];
+        if (i < size_of_number_2) {
+            temp -= number_2[i];
+        }
+
+        if (temp < 0) {
+            if (i + 1 == size_of_result) {
+                temp = -temp;
+                minus = 1;
+            }
+
+            carry = -1;
+            temp += BASE;
+        } else {
+            carry = 0;
+        }
+
+        result[i] = temp;
+    }
+    return minus;
+};
 
 int multiply(int a, int b) {};
 
@@ -111,14 +140,32 @@ int main(void) {
             unsigned short size_of_result = 0;
 
             switch (operation) {
-                case '+':
+                case '+': {
                     size_of_result = max(size_of_number_1, size_of_number_2) + 1;
                     unsigned short result[size_of_result];
                     memset(result, 0, sizeof(result));
                     add(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
-                    break;
+                }
+                break;
+                case '-': {
+                    size_of_result = max(size_of_number_1, size_of_number_2);
+                    unsigned short result[size_of_result];
+                    memset(result, 0, sizeof(result));
+
+                    unsigned short minus = 0;
+
+                    if (size_of_number_1 > size_of_number_2) {
+                        subtract(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+                    } else {
+                        minus = subtract(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result);
+                        if (size_of_number_1 < size_of_number_2) { minus = 1;}
+                    }
+                    printf("f");
+                }
+                break;
             }
-            
+
+
             printf("yaay");
         } else {
             printf("Invalid number.");
