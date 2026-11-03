@@ -1,9 +1,12 @@
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-#define BASE_DIFFERENCE 0.2076
-#define BASE 65536
+#define BASE_DIFFERENCE 0.2076 // Log base 2^16 to 10
+#define BASE_REVERSE_DIFFERENCE 4.81648 // Log base 10 to 2^16
+#define MAX_POSSIBLE_LENGTH 11 // Consider length of (65536 * 65535) + 1 for null terminator
+#define BASE 65536 // 2^16; amount of all possible values short can store
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -78,11 +81,16 @@ static int convert_string_to_number(char string[], unsigned short number[], unsi
     return 0;
 }
 
-// Digits in base 2^16 = [ Amount of digits in base 10 * log base 2^16 of 10 ]
 static unsigned short calculate_array_size(const char string[]) {
+    // Digits in base 2^16 = [ Amount of digits in base 10 * log base 2^16 of 10 ]
     unsigned long length_of_string = strlen(string);
     double calculation = (double) length_of_string * BASE_DIFFERENCE;
     return (unsigned short)(ceil(calculation));
+}
+
+static unsigned int calculate_string_size(const unsigned short size_of_number) {
+    double calculation = (double) size_of_number * BASE_REVERSE_DIFFERENCE;
+    return (unsigned int)(ceil(calculation));
 }
 
 static int get_input(char* string[]) {
@@ -97,8 +105,33 @@ static int get_input(char* string[]) {
     return length_of_string;
 }
 
-static void convert_array_to_string(const unsigned short number[], char string[]) {
+static void convert_number_to_string(const unsigned short number[], unsigned short size_of_number, char string[]) {
+    unsigned short size_of_temp = calculate_string_size(size_of_number);
+    unsigned short temp[size_of_temp];
+    unsigned short count = 1;
+    memset(temp, 0, sizeof(temp));
 
+    for (int i = size_of_number - 1; i > -1; i--) {
+        unsigned long carry = number[i];
+
+        for (unsigned short j = 0; j < count; j++) {
+            unsigned long temp_value = temp[j] * BASE + carry;
+            temp[j] = temp_value % 10;
+            carry = temp_value / 10;
+        }
+
+        while (carry != 0) {
+            temp[count] = (carry % 10);
+            carry = carry / 10;
+            count++;
+        }
+    }
+
+    for (unsigned short i = 0; i < count; i++) {
+        string[i] = (char)('0' + temp[count - i - 1]);
+    }
+
+    string[count] = '\0';
 }
 
 int main(void) {
@@ -132,7 +165,13 @@ int main(void) {
                     size_of_result = max(size_of_number_1, size_of_number_2) + 1;
                     unsigned short result[size_of_result];
                     memset(result, 0, sizeof(result));
+
                     add(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+
+                    char output[calculate_string_size(size_of_number_1) + 1];
+                    convert_number_to_string(result, size_of_result, output);
+                    printf("Result=%s\n", output);
+
                 }
                 break;
                 case '-': {
