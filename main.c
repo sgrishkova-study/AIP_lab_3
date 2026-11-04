@@ -68,8 +68,8 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
         unsigned long carry = 0;
 
         for (unsigned short j = 0; j < size_of_number_1; j++) {
-            unsigned long temp = (unsigned long)result[i + j] + (unsigned long) (number_1[j] * number_2[i]) + carry;
-            result[i + j] = (unsigned long)(temp % BASE);
+            unsigned long temp = (unsigned long)result[i + j] + (unsigned long)number_1[j] * (unsigned long)number_2[i] + carry;
+            result[i + j] = (unsigned short)(temp % BASE);
             carry = temp / BASE;
         }
 
@@ -77,7 +77,7 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
 
         while (carry > 0 && k < size_of_result) {
             unsigned long temp = (unsigned long)(result[k] + carry);
-            result[k] = (unsigned long)(temp % (BASE));
+            result[k] = (unsigned short)(temp % (BASE));
             carry = temp / BASE;
             k++;
         }
@@ -289,6 +289,62 @@ static void print_result(const unsigned short result[], unsigned short size_of_r
     printf("Result=%s%s", negative ? "-" : "", output);
 }
 
+static bool decrement(unsigned short number[], unsigned short size) {
+    for (unsigned short i = 0; i < size; i++) {
+        if (number[i] > 0) {
+            number[i]--;
+            return true;
+        }
+        number[i] = BASE - 1;
+    }
+    return false;
+}
+
+static void sum_to_n(const unsigned short number[], unsigned short size_of_number, unsigned short result[],unsigned short size_of_result) {
+    unsigned short next[size_of_number + 1];
+    unsigned short product[size_of_result];
+
+    memset(next, 0, sizeof(next));
+    memset(product, 0, sizeof(product));
+
+    memcpy(next, number, size_of_number * sizeof(unsigned short));
+    increment(next, size_of_number + 1);
+
+    unsigned short next_size = get_actual_size(next, size_of_number + 1);
+
+    multiply(number,next, product,size_of_number,next_size,size_of_result);
+    divide_by_2(product, size_of_result);
+
+    memcpy(result,product,size_of_result * sizeof(unsigned short));
+}
+
+static int sum_range(const unsigned short a[], const unsigned short b[], unsigned short result[], unsigned short size_of_a, unsigned short size_of_b, unsigned short size_of_result) {
+    if (compare(a, b, size_of_a, size_of_b) > 0) {
+        return -1;
+    }
+
+    unsigned short sum_b[size_of_result];
+    unsigned short a_minus_one[size_of_a];
+    unsigned short sum_before_a[size_of_result];
+
+    memset(sum_b, 0, sizeof(sum_b));
+    memset(a_minus_one, 0, sizeof(a_minus_one));
+    memset(sum_before_a, 0, sizeof(sum_before_a));
+
+    sum_to_n(b, size_of_b, sum_b, size_of_result);
+
+    memcpy(a_minus_one, a,size_of_a * sizeof(unsigned short));
+
+    if (!decrement(a_minus_one, size_of_a)) {
+        return -1;
+    }
+
+    sum_to_n(a_minus_one,size_of_a, sum_before_a, size_of_result);
+    subtract(sum_b,sum_before_a, result, size_of_result,size_of_result,size_of_result);
+
+    return 0;
+}
+
 int main(void) {
     char operation;
     if (scanf("%c\n", &operation) != 1) {
@@ -346,7 +402,12 @@ int main(void) {
     int sign_1 = minus_1 ? -1 : 1;
     int sign_2 = minus_2 ? -1 : 1;
 
-    if (operation == '*') {
+    if (operation == 'S') {
+        if (minus_1 || minus_2) {
+            printf("Negative numbers are not supported for S.");
+            return -1;
+        }
+    } else if (operation == '*') {
         negative_output = (sign_1 * sign_2 < 0);
     } else if (operation == '^') {
         if (minus_2) {
@@ -453,6 +514,21 @@ int main(void) {
                     size_of_result = get_actual_size(result, size_of_result);
 
                     print_result(result, size_of_result, negative_output);
+                }
+                break;
+                case 'S': {
+                    size_of_result = MAX_RESULT_SIZE;
+
+                    unsigned short result[MAX_RESULT_SIZE];
+                    memset(result, 0, sizeof(result));
+
+                    if (sum_range(number_1,number_2,result,size_of_number_1,size_of_number_2, size_of_result) == -1) {
+                        printf("Invalid range.");
+                        return -1;
+                    }
+
+                    size_of_result = get_actual_size(result, size_of_result);
+                    print_result(result, size_of_result, false);
                 }
                 break;
             }
