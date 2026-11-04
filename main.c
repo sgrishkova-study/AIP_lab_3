@@ -68,16 +68,16 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
         unsigned long carry = 0;
 
         for (unsigned short j = 0; j < size_of_number_1; j++) {
-            unsigned long temp = result[i + j] + number_1[j] * number_2[i] + carry;
-            result[i + j] = temp % BASE;
+            unsigned long temp = (unsigned long)result[i + j] + (unsigned long) (number_1[j] * number_2[i]) + carry;
+            result[i + j] = (unsigned long)(temp % BASE);
             carry = temp / BASE;
         }
 
         unsigned short k = i + size_of_number_1;
 
         while (carry > 0 && k < size_of_result) {
-            unsigned long temp = result[k] + carry;
-            result[k] = temp % BASE;
+            unsigned long temp = (unsigned long)(result[k] + carry);
+            result[k] = (unsigned long)(temp % (BASE));
             carry = temp / BASE;
             k++;
         }
