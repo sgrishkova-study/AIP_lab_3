@@ -233,22 +233,25 @@ static unsigned int calculate_string_size(const unsigned short size_of_number) {
     return (unsigned int)(ceil(calculation));
 }
 
-static int get_input(char* string[], bool* minus) {
-    size_t size_string_1 = 0;
-    int length_of_string = 0;
-    length_of_string = getline(string, &size_string_1, stdin);
+static int get_input(char **string, bool *minus) {
+    size_t capacity = 0;
+    ssize_t length = getline(string, &capacity, stdin);
 
-    if (length_of_string > 0) {
-        length_of_string = length_of_string - 1;
-    } else {
+    if (length < 0) {
         return -1;
     }
 
-    if (*string[0] == '-') {
-        *minus = !*minus;
+    if (length > 0 && (*string)[length - 1] == '\n') {
+        (*string)[--length] = '\0';
     }
 
-    return length_of_string;
+    if (length > 0 && (*string)[0] == '-') {
+        *minus = true;
+        memmove(*string, *string + 1, (size_t)length);
+        length--;
+    }
+
+    return length;
 }
 
 static void convert_number_to_string(const unsigned short number[], unsigned short size_of_number, char string[]) {
@@ -288,60 +291,83 @@ static void print_result(const unsigned short result[], unsigned short size_of_r
 
 int main(void) {
     char operation;
-    scanf("%c\n", &operation);
+    if (scanf("%c\n", &operation) != 1) {
+        printf("Unknown operation.");
+        return -1;
+    }
 
-    if (strchr("+-*^S!", operation) != NULL) {
-        bool minus_1 = false;
-        bool minus_2 = false;
-        bool negative_output = false;
+    if (strchr("+-*^S!", operation) == NULL) {
+        printf("Unknown operation.");
+        return -1;
+    }
 
-        char* string_1 = NULL;
-        int length_of_number_1 = get_input(&string_1, &minus_1);
+    bool minus_1 = false;
+
+    char* string_1 = NULL;
+    int length_of_number_1 = get_input(&string_1, &minus_1);
+
+    if (length_of_number_1 <= 0) {
+        printf("Invalid number.");
+        return -1;
+    }
+
+    if (operation == '!') {
         if (minus_1) {
-            memmove(string_1, string_1 + 1, strlen(string_1));
-            length_of_number_1 -= 1;
+            printf("Factorial of negative numbers is not supported.");
+            return -1;
         }
 
-        char* string_2 = NULL;
-        int length_of_number_2 = get_input(&string_2, &minus_2);
+        unsigned short number_1[calculate_array_size(string_1)];
+        memset(number_1, 0, sizeof(number_1));
+
+        unsigned short size_of_number_1 = sizeof(number_1) / sizeof(number_1[0]);
+
+        if (convert_string_to_number(string_1, number_1, size_of_number_1) == -1) { return -1; }
+
+        unsigned short result[MAX_RESULT_SIZE] = {0};
+
+        factorial(number_1, result,size_of_number_1,MAX_RESULT_SIZE);
+        unsigned short size_of_result = get_actual_size(result, MAX_RESULT_SIZE);
+
+        print_result(result, size_of_result, false);
+        return 0;
+    }
+
+    bool minus_2 = false;
+    bool negative_output = false;
+    char* string_2 = NULL;
+    int length_of_number_2 = get_input(&string_2, &minus_2);
+
+    if (length_of_number_2 <= 0) {
+        printf("Invalid number.");
+        return -1;
+    }
+
+    int sign_1 = minus_1 ? -1 : 1;
+    int sign_2 = minus_2 ? -1 : 1;
+
+    if (operation == '*') {
+        negative_output = (sign_1 * sign_2 < 0);
+    } else if (operation == '^') {
         if (minus_2) {
-            memmove(string_2, string_2 + 1, strlen(string_2));
-            length_of_number_2 -= 1;
+            printf("Negative exponents are not supported.");
+            return -1;
         }
+        negative_output = minus_1 && ((string_2[length_of_number_2 - 1] - '0') % 2 != 0);
+    } else {
+        int operation_sign = operation == '+' ? 1 : -1;
+        int effective_sign_2 = sign_2 * operation_sign;
 
-        int sign_1 = minus_1 ? -1 : 1;
-        int sign_2 = minus_2 ? -1 : 1;
-
-        if (operation == '!') {
-            if (minus_1) {
-                printf("Factorial of negative numbers is not supported.");
-                return -1;
-            }
-            negative_output = false;
-        } else if (operation == '*') {
-            negative_output = (sign_1 * sign_2 < 0);
-        } else if (operation == '^') {
-            if (minus_2) {
-                printf("Negative exponents are not supported.");
-                return -1;
-            }
-            negative_output = minus_1 &&
-                ((string_2[length_of_number_2 - 1] - '0') % 2 != 0);
+        if (sign_1 == effective_sign_2) {
+            operation = '+';
         } else {
-            int operation_sign = (operation == '+') ? 1 : -1;
-            int effective_sign_2 = sign_2 * operation_sign;
-
-            if (sign_1 == effective_sign_2) {
-                operation = '+';
-            } else {
-                operation = '-';
-            }
-
-            negative_output = (sign_1 == -1);
+            operation = '-';
         }
 
-        if ((length_of_number_1 > 0) && (operation == '!' || length_of_number_2 > 0)) {
+        negative_output = sign_1 == -1;
+    }
 
+    if ((length_of_number_1 > 0) && (operation == '!' || length_of_number_2 > 0)) {
             string_1[length_of_number_1] = '\0';
             unsigned short number_1[calculate_array_size(string_1)];
             memset(number_1, 0, sizeof(number_1));
@@ -429,29 +455,11 @@ int main(void) {
                     print_result(result, size_of_result, negative_output);
                 }
                 break;
-                case '!': {
-                    size_of_result = MAX_RESULT_SIZE;
-                    unsigned short result[size_of_result];
-                    memset(result, 0, sizeof(result));
-
-                    factorial(number_1, result,size_of_number_1, size_of_result);
-                    size_of_result = get_actual_size(result, size_of_result);
-
-                    print_result(result, size_of_result, false);
-                }
-                break;
-
             }
-
         } else {
             printf("Invalid number.");
             return -1;
         }
-
-    } else {
-        printf("Unknown operation.");
-        return -1;
-    }
 
     return 0;
 };
