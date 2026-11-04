@@ -175,6 +175,18 @@ static short compare(const unsigned short number_1[], const unsigned short numbe
     return 0;
 }
 
+static void print_result(
+    const unsigned short result[],
+    unsigned short size_of_result,
+    bool negative
+) {
+    char output[calculate_string_size(size_of_result) + 1];
+
+    convert_number_to_string(result, size_of_result, output);
+
+    printf("Result=%s%s\n", negative ? "-" : "", output);
+}
+
 
 int main(void) {
     char operation;
@@ -243,11 +255,7 @@ int main(void) {
                     char output[calculate_string_size(size_of_result) + 1];
                     convert_number_to_string(result, size_of_result, output);
 
-                    if (negative_output) {
-                        printf("Result=-%s\n", output);
-                    } else {
-                        printf("Result=%s\n", output);
-                    }
+                    print_result(result, size_of_result, negative_output);
 
                 }
                 break;
@@ -270,11 +278,7 @@ int main(void) {
                     char output[calculate_string_size(size_of_result) + 1];
                     convert_number_to_string(result, size_of_result, output);
 
-                    if (negative_output) {
-                        printf("Result=-%s\n", output);
-                    } else {
-                        printf("Result=%s\n", output);
-                    }
+                    print_result(result, size_of_result, negative_output);
                 }
                 break;
                 case '*': {
@@ -291,11 +295,7 @@ int main(void) {
                     char output[calculate_string_size(size_of_result) + 1];
                     convert_number_to_string(result, size_of_result, output);
 
-                    if (negative_output) {
-                        printf("Result=-%s\n", output);
-                    } else {
-                        printf("Result=%s\n", output);
-                    }
+                    print_result(result, size_of_result, negative_output);
                 }
                 break;
             }
