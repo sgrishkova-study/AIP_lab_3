@@ -4,8 +4,8 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define BASE_DIFFERENCE 0.2076 // Log base 2^16 to 10
-#define BASE_REVERSE_DIFFERENCE 4.81648 // Log base 10 to 2^16
+#define BASE_DIFFERENCE 0.20763 // Log base 2^16 to 10
+#define BASE_REVERSE_DIFFERENCE 4.8165 // Log base 10 to 2^16
 #define BASE 65536 // 2^16; amount of all possible values short can store
 #define MAX_INPUT_SIZE 208
 #define MAX_RESULT_SIZE 416
@@ -51,6 +51,17 @@ static void subtract(const unsigned short number_1[], const unsigned short numbe
         result[i] = (unsigned short) temp;
     }
 };
+
+static void increment(unsigned short number[], unsigned short size) {
+    unsigned int carry = 1;
+
+    for (unsigned short i = 0; i < size && carry; i++) {
+        unsigned int temp = number[i] + carry;
+
+        number[i] = temp % BASE;
+        carry = temp / BASE;
+    }
+}
 
 static void multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
     for (unsigned short i = 0; i < size_of_number_2; i++) {
@@ -112,6 +123,27 @@ static unsigned short divide_by_2(unsigned short number[], unsigned short size) 
     }
 
     return (unsigned short) carry;
+}
+
+static void factorial(const unsigned short number[], unsigned short result[], unsigned short size_of_number, unsigned short size_of_result) {
+    result[0] = 1;
+
+    unsigned short multiplier[size_of_number];
+    memset(multiplier, 0, sizeof(multiplier));
+    multiplier[0] = 2;
+
+    unsigned short multiplier_size = get_actual_size(multiplier, size_of_number);
+
+    while (compare(multiplier, number, multiplier_size, size_of_number) <= 0) {
+        unsigned short temp[size_of_result];
+        memset(temp, 0, sizeof(temp));
+
+        multiply(result,multiplier, temp, size_of_result,multiplier_size, size_of_result);
+        memcpy(result, temp, size_of_result * sizeof(unsigned short));
+        increment(multiplier, size_of_number);
+
+        multiplier_size = get_actual_size(multiplier, size_of_number);
+    }
 }
 
 // exponentiation by squaring
@@ -251,7 +283,7 @@ static void convert_number_to_string(const unsigned short number[], unsigned sho
 static void print_result(const unsigned short result[], unsigned short size_of_result, bool negative) {
     char output[calculate_string_size(size_of_result) + 1];
     convert_number_to_string(result, size_of_result, output);
-    printf("Result=%s%s\n", negative ? "-" : "", output);
+    printf("Result=%s%s", negative ? "-" : "", output);
 }
 
 int main(void) {
@@ -280,14 +312,21 @@ int main(void) {
         int sign_1 = minus_1 ? -1 : 1;
         int sign_2 = minus_2 ? -1 : 1;
 
-        if (operation == '*') {
+        if (operation == '!') {
+            if (minus_1) {
+                printf("Factorial of negative numbers is not supported.");
+                return -1;
+            }
+            negative_output = false;
+        } else if (operation == '*') {
             negative_output = (sign_1 * sign_2 < 0);
         } else if (operation == '^') {
             if (minus_2) {
                 printf("Negative exponents are not supported.");
                 return -1;
             }
-            negative_output = minus_1 && ((string_2[length_of_number_2 - 1] - '0') % 2 != 0);
+            negative_output = minus_1 &&
+                ((string_2[length_of_number_2 - 1] - '0') % 2 != 0);
         } else {
             int operation_sign = (operation == '+') ? 1 : -1;
             int effective_sign_2 = sign_2 * operation_sign;
@@ -301,7 +340,7 @@ int main(void) {
             negative_output = (sign_1 == -1);
         }
 
-        if ((length_of_number_1 > 0) && (length_of_number_2 > 0)) {
+        if ((length_of_number_1 > 0) && (operation == '!' || length_of_number_2 > 0)) {
 
             string_1[length_of_number_1] = '\0';
             unsigned short number_1[calculate_array_size(string_1)];
@@ -388,6 +427,17 @@ int main(void) {
                     size_of_result = get_actual_size(result, size_of_result);
 
                     print_result(result, size_of_result, negative_output);
+                }
+                break;
+                case '!': {
+                    size_of_result = MAX_RESULT_SIZE;
+                    unsigned short result[size_of_result];
+                    memset(result, 0, sizeof(result));
+
+                    factorial(number_1, result,size_of_number_1, size_of_result);
+                    size_of_result = get_actual_size(result, size_of_result);
+
+                    print_result(result, size_of_result, false);
                 }
                 break;
 
