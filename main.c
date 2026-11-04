@@ -6,7 +6,6 @@
 
 #define BASE_DIFFERENCE 0.2076 // Log base 2^16 to 10
 #define BASE_REVERSE_DIFFERENCE 4.81648 // Log base 10 to 2^16
-#define MAX_POSSIBLE_LENGTH 11 // Consider length of (65536 * 65535) + 1 for null terminator
 #define BASE 65536 // 2^16; amount of all possible values short can store
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
@@ -49,6 +48,27 @@ static void subtract(const unsigned short number_1[], const unsigned short numbe
         result[i] = (unsigned short) temp;
     }
 };
+
+static void multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
+    for (unsigned short i = 0; i < size_of_number_2; i++) {
+        unsigned long carry = 0;
+
+        for (unsigned short j = 0; j < size_of_number_1; j++) {
+            unsigned long temp = result[i + j] + number_1[j] * number_2[i] + carry;
+            result[i + j] = temp % BASE;
+            carry = temp / BASE;
+        }
+
+        unsigned short k = i + size_of_number_1;
+
+        while (carry > 0 && k < size_of_result) {
+            unsigned long temp = result[k] + carry;
+            result[k] = temp % BASE;
+            carry = temp / BASE;
+            k++;
+        }
+    }
+}
 
 static int convert_string_to_number(char string[], unsigned short number[], unsigned short size_of_number) {
     unsigned long length_of_string = strlen(string);
@@ -181,14 +201,19 @@ int main(void) {
 
         int sign_1 = minus_1 ? -1 : 1;
         int sign_2 = minus_2 ? -1 : 1;
-        int operation_sign = (operation == '+') ? 1 : -1;
-        int effective_sign_2 = sign_2 * operation_sign;
 
-        if (sign_1 == effective_sign_2) {
-            operation = '+';
-            negative_output = (sign_1 == -1);
+        if (operation == '*') {
+            negative_output = (sign_1 * sign_2 < 0);
         } else {
-            operation = '-';
+            int operation_sign = (operation == '+') ? 1 : -1;
+            int effective_sign_2 = sign_2 * operation_sign;
+
+            if (sign_1 == effective_sign_2) {
+                operation = '+';
+            } else {
+                operation = '-';
+            }
+
             negative_output = (sign_1 == -1);
         }
 
@@ -252,6 +277,27 @@ int main(void) {
                     }
                 }
                 break;
+                case '*': {
+                    size_of_result = size_of_number_1 + size_of_number_2;
+                    unsigned short result[size_of_result];
+                    memset(result, 0, sizeof(result));
+                    short check = compare(number_1, number_2, size_of_number_1, size_of_number_2);
+                    if (check == 1) {
+                        multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+                    } else {
+                        multiply(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result);
+                    }
+
+                    char output[calculate_string_size(size_of_result) + 1];
+                    convert_number_to_string(result, size_of_result, output);
+
+                    if (negative_output) {
+                        printf("Result=-%s\n", output);
+                    } else {
+                        printf("Result=%s\n", output);
+                    }
+                }
+                break;
             }
 
         } else {
@@ -265,4 +311,4 @@ int main(void) {
     }
 
     return 0;
-}
+};
