@@ -7,6 +7,8 @@
 #define BASE_DIFFERENCE 0.2076 // Log base 2^16 to 10
 #define BASE_REVERSE_DIFFERENCE 4.81648 // Log base 10 to 2^16
 #define BASE 65536 // 2^16; amount of all possible values short can store
+#define MAX_INPUT_SIZE 208
+#define MAX_RESULT_SIZE 416
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -68,6 +70,90 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
             carry = temp / BASE;
             k++;
         }
+    }
+}
+
+static unsigned short get_actual_size(const unsigned short number[], unsigned short size) {
+    while (size > 1 && number[size - 1] == 0) {
+        size--;
+    }
+
+    return size;
+}
+
+static short compare(const unsigned short number_1[], const unsigned short number_2[], unsigned short size_1, unsigned short size_2
+) {
+    while (size_1 > 0 && number_1[size_1 - 1] == 0) {
+        size_1--;
+    }
+
+    while (size_2 > 0 && number_2[size_2 - 1] == 0) {
+        size_2--;
+    }
+
+    if (size_1 > size_2) return 1;
+    if (size_1 < size_2) return -1;
+
+    for (int i = size_1 - 1; i >= 0; i--) {
+        if (number_1[i] > number_2[i]) return 1;
+        if (number_1[i] < number_2[i]) return -1;
+    }
+
+    return 0;
+}
+
+static unsigned short divide_by_2(unsigned short number[], unsigned short size) {
+    unsigned int carry = 0;
+    for (int i = size - 1; i >= 0; i--) {
+        unsigned int temp = carry * BASE + number[i];
+
+        number[i] = temp / 2;
+        carry = temp % 2;
+    }
+
+    return (unsigned short) carry;
+}
+
+// exponentiation by squaring
+static void power(const unsigned short number[], unsigned short exponent[], unsigned short result[], unsigned short size_of_number, unsigned short size_of_exponent, unsigned short size_of_result) {
+    result[0] = 1;
+
+    unsigned short base[size_of_result];
+    memset(base, 0, sizeof(base));
+    memcpy(base,number,size_of_number * sizeof(unsigned short));
+
+    unsigned short exp[size_of_exponent];
+    memcpy(exp, exponent,size_of_exponent * sizeof(unsigned short));
+
+    unsigned short base_size = get_actual_size(base, size_of_result);
+    unsigned short exp_size = get_actual_size(exp, size_of_exponent);
+    unsigned short result_size = 1;
+
+    while (!(exp_size == 1 && exp[0] == 0)) {
+        unsigned short remainder = divide_by_2(exp, exp_size);
+        exp_size = get_actual_size(exp, exp_size);
+
+        if (remainder == 1) {
+            unsigned short temp[size_of_result];
+            memset(temp, 0, sizeof(temp));
+            multiply(result, base, temp, size_of_result, base_size, size_of_result);
+
+            memcpy(result, temp, sizeof(temp));
+
+            result_size = get_actual_size(result, size_of_result);
+        }
+
+        if (exp_size == 1 && exp[0] == 0) {
+            break;
+        }
+
+        unsigned short temp[size_of_result];
+        memset(temp, 0, sizeof(temp));
+
+        multiply(base, base, temp, base_size, base_size, size_of_result);
+        memcpy(base, temp, sizeof(temp));
+
+        base_size = get_actual_size(base, size_of_result);
     }
 }
 
@@ -162,36 +248,9 @@ static void convert_number_to_string(const unsigned short number[], unsigned sho
     string[count] = '\0';
 }
 
-static short compare(const unsigned short number_1[], const unsigned short number_2[], unsigned short size_1, unsigned short size_2
-) {
-    while (size_1 > 0 && number_1[size_1 - 1] == 0) {
-        size_1--;
-    }
-
-    while (size_2 > 0 && number_2[size_2 - 1] == 0) {
-        size_2--;
-    }
-
-    if (size_1 > size_2) return 1;
-    if (size_1 < size_2) return -1;
-
-    for (int i = size_1 - 1; i >= 0; i--) {
-        if (number_1[i] > number_2[i]) return 1;
-        if (number_1[i] < number_2[i]) return -1;
-    }
-
-    return 0;
-}
-
-static void print_result(
-    const unsigned short result[],
-    unsigned short size_of_result,
-    bool negative
-) {
+static void print_result(const unsigned short result[], unsigned short size_of_result, bool negative) {
     char output[calculate_string_size(size_of_result) + 1];
-
     convert_number_to_string(result, size_of_result, output);
-
     printf("Result=%s%s\n", negative ? "-" : "", output);
 }
 
@@ -223,6 +282,12 @@ int main(void) {
 
         if (operation == '*') {
             negative_output = (sign_1 * sign_2 < 0);
+        } else if (operation == '^') {
+            if (minus_2) {
+                printf("Negative exponents are not supported.");
+                return -1;
+            }
+            negative_output = minus_1 && ((string_2[length_of_number_2 - 1] - '0') % 2 != 0);
         } else {
             int operation_sign = (operation == '+') ? 1 : -1;
             int effective_sign_2 = sign_2 * operation_sign;
@@ -237,10 +302,12 @@ int main(void) {
         }
 
         if ((length_of_number_1 > 0) && (length_of_number_2 > 0)) {
+
             string_1[length_of_number_1] = '\0';
             unsigned short number_1[calculate_array_size(string_1)];
             memset(number_1, 0, sizeof(number_1));
             const unsigned short size_of_number_1 = sizeof(number_1) / sizeof(number_1[0]);
+
             if (convert_string_to_number(string_1, number_1, size_of_number_1) == - 1) {
                 return -1;
             };
@@ -298,6 +365,7 @@ int main(void) {
                     unsigned short result[size_of_result];
                     memset(result, 0, sizeof(result));
                     short check = compare(number_1, number_2, size_of_number_1, size_of_number_2);
+
                     if (check == 1) {
                         multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
                     } else {
@@ -310,6 +378,19 @@ int main(void) {
                     print_result(result, size_of_result, negative_output);
                 }
                 break;
+                case '^': {
+                    size_of_result = MAX_RESULT_SIZE;
+                    unsigned short result[size_of_result];
+                    memset(result, 0, sizeof(result));
+
+                    power(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+
+                    size_of_result = get_actual_size(result, size_of_result);
+
+                    print_result(result, size_of_result, negative_output);
+                }
+                break;
+
             }
 
         } else {
