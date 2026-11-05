@@ -8,7 +8,7 @@
 #define BASE_REVERSE_DIFFERENCE 4.8165 // Log base 10 to 2^16
 #define BASE 65536 // 2^16; amount of all possible values short can store
 #define MAX_INPUT_SIZE 208
-#define MAX_RESULT_SIZE 416
+#define MAX_RESULT_SIZE 7500
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -63,14 +63,21 @@ static void increment(unsigned short number[], unsigned short size) {
     }
 }
 
-static void multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
+static bool multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
     for (unsigned short i = 0; i < size_of_number_2; i++) {
         unsigned long carry = 0;
 
         for (unsigned short j = 0; j < size_of_number_1; j++) {
-            unsigned long temp = (unsigned long)result[i + j] + (unsigned long)number_1[j] * (unsigned long)number_2[i] + carry;
-            result[i + j] = (unsigned short)(temp % BASE);
-            carry = temp / BASE;
+            if (i + j < size_of_result) {
+                unsigned long temp = (unsigned long)result[i + j] + (unsigned long)number_1[j] * (unsigned long)number_2[i] + carry;
+                result[i + j] = (unsigned short)(temp % BASE);
+                carry = temp / BASE;
+            } else {
+                printf("Multiply: array went out of borders!");
+                return false;
+                break;
+            }
+
         }
 
         unsigned short k = i + size_of_number_1;
@@ -82,6 +89,8 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
             k++;
         }
     }
+
+    return true;
 }
 
 static unsigned short get_actual_size(const unsigned short number[], unsigned short size) {
@@ -255,7 +264,7 @@ static int get_input(char **string, bool *minus) {
 }
 
 static void convert_number_to_string(const unsigned short number[], unsigned short size_of_number, char string[]) {
-    unsigned short size_of_temp = calculate_string_size(size_of_number);
+    unsigned int size_of_temp = calculate_string_size(size_of_number);
     unsigned short temp[size_of_temp];
     unsigned short count = 1;
     memset(temp, 0, sizeof(temp));
@@ -380,6 +389,8 @@ int main(void) {
 
         if (convert_string_to_number(string_1, number_1, size_of_number_1) == -1) { return -1; }
 
+
+
         unsigned short result[MAX_RESULT_SIZE] = {0};
 
         factorial(number_1, result,size_of_number_1,MAX_RESULT_SIZE);
@@ -493,9 +504,13 @@ int main(void) {
                     short check = compare(number_1, number_2, size_of_number_1, size_of_number_2);
 
                     if (check == 1) {
-                        multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+                        if (!multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result)) {
+                            return -1;
+                        }
                     } else {
-                        multiply(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result);
+                        if (!multiply(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result)) {
+                            return -1;
+                        }
                     }
 
                     char output[calculate_string_size(size_of_result) + 1];
