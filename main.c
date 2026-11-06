@@ -177,7 +177,7 @@ static void power(const unsigned short number[], unsigned short exponent[], unsi
         if (remainder == 1) {
             unsigned short temp[size_of_result];
             memset(temp, 0, sizeof(temp));
-            multiply(result, base, temp, size_of_result, base_size, size_of_result);
+            multiply(result, base, temp, result_size, base_size, size_of_result);
 
             memcpy(result, temp, sizeof(temp));
 
