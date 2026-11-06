@@ -342,13 +342,17 @@ static int sum_range(const unsigned short a[], const unsigned short b[], unsigne
 
     sum_to_n(b, size_of_b, sum_b, size_of_result);
 
-    memcpy(a_minus_one, a,size_of_a * sizeof(unsigned short));
+    bool a_is_zero = get_actual_size(a, size_of_a) == 1 && a[0] == 0;
 
-    if (!decrement(a_minus_one, size_of_a)) {
-        return -1;
+    if (!a_is_zero) {
+        memcpy(a_minus_one, a, size_of_a * sizeof(unsigned short));
+        decrement(a_minus_one, size_of_a);
+
+        unsigned short actual_size = get_actual_size(a_minus_one, size_of_a);
+
+        sum_to_n(a_minus_one, actual_size, sum_before_a, size_of_result);
     }
 
-    sum_to_n(a_minus_one,size_of_a, sum_before_a, size_of_result);
     subtract(sum_b,sum_before_a, result, size_of_result,size_of_result,size_of_result);
 
     return 0;
