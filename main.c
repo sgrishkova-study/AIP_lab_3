@@ -8,7 +8,7 @@
 #define BASE_REVERSE_DIFFERENCE 4.8165 // Log base 10 to 2^16
 #define BASE 65536 // 2^16; amount of all possible values short can store
 #define MAX_INPUT_SIZE 208
-#define MAX_RESULT_SIZE 416
+#define MAX_RESULT_SIZE 7500
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -63,14 +63,21 @@ static void increment(unsigned short number[], unsigned short size) {
     }
 }
 
-static void multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
+static bool multiply(const unsigned short number_1[], const unsigned short number_2[], unsigned short result[], const unsigned short size_of_number_1, const unsigned short size_of_number_2, const unsigned short size_of_result) {
     for (unsigned short i = 0; i < size_of_number_2; i++) {
         unsigned long carry = 0;
 
         for (unsigned short j = 0; j < size_of_number_1; j++) {
-            unsigned long temp = (unsigned long)result[i + j] + (unsigned long)number_1[j] * (unsigned long)number_2[i] + carry;
-            result[i + j] = (unsigned short)(temp % BASE);
-            carry = temp / BASE;
+            if (i + j < size_of_result) {
+                unsigned long temp = (unsigned long)result[i + j] + (unsigned long)number_1[j] * (unsigned long)number_2[i] + carry;
+                result[i + j] = (unsigned short)(temp % BASE);
+                carry = temp / BASE;
+            } else {
+                printf("Multiply: array went out of borders!");
+                return false;
+                break;
+            }
+
         }
 
         unsigned short k = i + size_of_number_1;
@@ -82,6 +89,8 @@ static void multiply(const unsigned short number_1[], const unsigned short numbe
             k++;
         }
     }
+
+    return true;
 }
 
 static unsigned short get_actual_size(const unsigned short number[], unsigned short size) {
@@ -255,7 +264,7 @@ static int get_input(char **string, bool *minus) {
 }
 
 static void convert_number_to_string(const unsigned short number[], unsigned short size_of_number, char string[]) {
-    unsigned short size_of_temp = calculate_string_size(size_of_number);
+    unsigned int size_of_temp = calculate_string_size(size_of_number);
     unsigned short temp[size_of_temp];
     unsigned short count = 1;
     memset(temp, 0, sizeof(temp));
@@ -333,13 +342,17 @@ static int sum_range(const unsigned short a[], const unsigned short b[], unsigne
 
     sum_to_n(b, size_of_b, sum_b, size_of_result);
 
-    memcpy(a_minus_one, a,size_of_a * sizeof(unsigned short));
+    bool a_is_zero = get_actual_size(a, size_of_a) == 1 && a[0] == 0;
 
-    if (!decrement(a_minus_one, size_of_a)) {
-        return -1;
+    if (!a_is_zero) {
+        memcpy(a_minus_one, a, size_of_a * sizeof(unsigned short));
+        decrement(a_minus_one, size_of_a);
+
+        unsigned short actual_size = get_actual_size(a_minus_one, size_of_a);
+
+        sum_to_n(a_minus_one, actual_size, sum_before_a, size_of_result);
     }
 
-    sum_to_n(a_minus_one,size_of_a, sum_before_a, size_of_result);
     subtract(sum_b,sum_before_a, result, size_of_result,size_of_result,size_of_result);
 
     return 0;
@@ -379,6 +392,11 @@ int main(void) {
         unsigned short size_of_number_1 = sizeof(number_1) / sizeof(number_1[0]);
 
         if (convert_string_to_number(string_1, number_1, size_of_number_1) == -1) { return -1; }
+
+        if (size_of_number_1 > 1 || number_1[0] > 9999) {
+            printf("Number too big.");
+            return -1;
+        }
 
         unsigned short result[MAX_RESULT_SIZE] = {0};
 
@@ -493,9 +511,13 @@ int main(void) {
                     short check = compare(number_1, number_2, size_of_number_1, size_of_number_2);
 
                     if (check == 1) {
-                        multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result);
+                        if (!multiply(number_1, number_2, result, size_of_number_1, size_of_number_2, size_of_result)) {
+                            return -1;
+                        }
                     } else {
-                        multiply(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result);
+                        if (!multiply(number_2, number_1, result, size_of_number_2, size_of_number_1, size_of_result)) {
+                            return -1;
+                        }
                     }
 
                     char output[calculate_string_size(size_of_result) + 1];
