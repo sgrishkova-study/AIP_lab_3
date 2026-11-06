@@ -389,7 +389,10 @@ int main(void) {
 
         if (convert_string_to_number(string_1, number_1, size_of_number_1) == -1) { return -1; }
 
-
+        if (size_of_number_1 > 1 || number_1[0] > 9999) {
+            printf("Number too big.");
+            return -1;
+        }
 
         unsigned short result[MAX_RESULT_SIZE] = {0};
 
